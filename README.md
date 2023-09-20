@@ -1,5 +1,5 @@
 # Digital Iamge Processing
-## menber
+## Member
 1. Azen
 2. Antony
 3. 建安
