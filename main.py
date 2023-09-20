@@ -1,7 +1,9 @@
+# -*- coding: utf-8 -*-
 import numpy as np
+import matplotlib.pyplot as plt
 import sys
 import cv2
-import matplotlib.pyplot as plt
+
 np.set_printoptions(threshold=sys.maxsize)
 
 from imglib import imglib
