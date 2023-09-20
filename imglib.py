@@ -1,5 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import cv2
+
 class imglib:
     def __init__(self, img) -> None:
         self.original_img = img
@@ -9,11 +11,23 @@ class imglib:
     
     def set_process_img(self, img):
         self.process_img = img
-        
+
+    def show(self, title, img):
+        screen_width = 1500
+        screen_height = 800
+        x = (screen_width - img.shape[0]) // 2
+        y = (screen_height - img.shape[1]) // 2
+        cv2.namedWindow(title, cv2.WINDOW_NORMAL)
+        cv2.moveWindow(title, x, y)
+        cv2.imshow(title, img)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
     def info(self):
         print('-' * 20 + 'Info' + '-' * 20)
         print('Original image shape: ', self.original_img.shape)
         print('Process image shape: ', self.process_img.shape)
+        print('gray image shape: ', self.gray.shape) if hasattr(self,'gray') else None
         print('-' * 44)
 
     def show_histogram(self):
@@ -30,7 +44,7 @@ class imglib:
         B = self.process_img[0,:,:]
         # self.Gray = np.mean(self.process_img,axis=0).astype(np.uint8)
         # self.Gray = 0.299 * R + G * 0.587 + B * 0.114
-        self.gray = np.around(0.299 * R + G * 0.587 + B * 0.114)
+        self.gray = np.around(0.299 * R + G * 0.587 + B * 0.114) #opencv version
         self.gray = self.gray.astype(np.uint8) # 圖像只有正數
         
         return self.gray
