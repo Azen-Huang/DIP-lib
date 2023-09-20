@@ -7,11 +7,14 @@ class imglib:
         self.row_size = len(img[0])
         self.col_size = len(img)
     
+    def set_process_img(self, img):
+        self.process_img = img
+        
     def info(self):
-        print(self.original_img.shape)
-        print(self.process_img.shape)
-        print(self.row_size)
-        print(self.col_size)
+        print('-' * 20 + 'Info' + '-' * 20)
+        print('Original image shape: ', self.original_img.shape)
+        print('Process image shape: ', self.process_img.shape)
+        print('-' * 44)
 
     def show_histogram(self):
         if hasattr(self, 'histogram'):
