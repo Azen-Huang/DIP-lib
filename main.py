@@ -9,11 +9,27 @@ np.set_printoptions(threshold=sys.maxsize)
 from imglib import imglib
 
 if __name__ == "__main__":
-    img = cv2.imread('Lenna.jpg', cv2.IMREAD_COLOR)
+    img = cv2.imread('eqhis_test1.png', cv2.IMREAD_COLOR)
     my_img = imglib(img)
     gray_img = my_img.to_gray()
     histogram = my_img.to_histogram()
 
-    my_img.info()
+    
+    # my_img.info()
     my_img.show('gray', gray_img)
+    my_img.show_histogram()
+
+    histogram_equalization_img = my_img.histogram_equalization()
+    my_img.to_histogram(histogram_equalization_img)
+    my_img.show_histogram()
+    my_img.show('histogram_equalization', histogram_equalization_img)
+
+    eq = cv2.equalizeHist(gray_img)
+    my_img.gray = eq
+    my_img.to_histogram()
+    my_img.show_histogram()
+    my_img.show('cv2 histogram_equalization', eq)
+
+
+    
     

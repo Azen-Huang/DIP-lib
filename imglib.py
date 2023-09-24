@@ -37,7 +37,7 @@ class imglib:
             plt.title('histogram')
             plt.show()
     
-    def to_gray(self): #圖像轉灰階 input: (3,x,x) BGR image output: (x, x) gray image
+    def to_gray(self): # 圖像轉灰階 input: (3,x,x) BGR image output: (x, x) gray image
         #opencv 預設排序不是RGB => BGR
         R = self.process_img[2,:,:]
         G = self.process_img[1,:,:]
@@ -49,10 +49,31 @@ class imglib:
         
         return self.gray
 
-    def to_histogram(self): #圖像直方圖 input: 2D array; output: array[255]
+    def to_histogram(self, img = None): #圖像直方圖 input: 2D array; output: array[255]
+        img = self.gray if img is None else img
         if hasattr(self, 'gray'):
             self.histogram = np.array([(self.gray == i).sum() for i in range(256)])
             return self.histogram
 
     def histogram_equalization(self): 
-        pass
+        # ref: https://www.cnblogs.com/klchang/p/9872363.html
+        
+        height, width = self.gray.shape
+        p = self.histogram / (height * width) * 1.0
+        cdf = np.zeros(len(p))
+        cdf[0] = p[0]
+        for i in range(1, len(p)):
+            cdf[i] = cdf[i - 1] + p[i]
+        cdf = np.around((256 - 1) * cdf)
+        
+        # cdf = (256 - 1) * (np.cumsum(self.histogram)/(self.gray.size * 1.0))
+
+        cdf = cdf.astype('uint8')
+        self.histogram = cdf
+        uniform_gray = np.zeros(self.gray.shape, dtype='uint8')  # Note the type of elements
+        for i in range(height):
+            for j in range(width):
+                uniform_gray[i,j] = cdf[self.gray[i,j]]
+        
+        self.process_img = uniform_gray
+        return uniform_gray
