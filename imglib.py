@@ -30,46 +30,53 @@ class imglib:
         print('gray image shape: ', self.gray.shape) if hasattr(self,'gray') else None
         print('-' * 44)
 
-    def show_histogram(self):
+    def show_histogram(self, title = 'histogram'):
         if hasattr(self, 'histogram'):
             x = np.arange(len(self.histogram))
             plt.bar(x, self.histogram, color='blue')
-            plt.title('histogram')
+            plt.title(title)
             plt.show()
     
-    def to_gray(self): # 圖像轉灰階 input: (3,x,x) BGR image output: (x, x) gray image
-        #opencv 預設排序不是RGB => BGR
+    # Anthony
+    def to_gray(self): # 圖像轉灰階 input: (3,x,x) BGR image output: (x, x) gray image        
+        # opencv 預設排序不是RGB => BGR
         R = self.process_img[2,:,:]
         G = self.process_img[1,:,:]
         B = self.process_img[0,:,:]
-        # self.Gray = np.mean(self.process_img,axis=0).astype(np.uint8)
-        # self.Gray = 0.299 * R + G * 0.587 + B * 0.114
+
+        # self.gray = np.mean(self.process_img,axis=0).astype(np.uint8)
+        # self.gray = 0.299 * R + G * 0.587 + B * 0.114
         self.gray = np.around(0.299 * R + G * 0.587 + B * 0.114) #opencv version
         self.gray = self.gray.astype(np.uint8) # 圖像只有正數
         
         return self.gray
 
-    def to_histogram(self, img = None): #圖像直方圖 input: 2D array; output: array[255]
-        img = self.gray if img is None else img
-        if hasattr(self, 'gray'):
-            self.histogram = np.array([(self.gray == i).sum() for i in range(256)])
+    # 建安
+    def to_histogram(self, img = None): #圖像直方圖 input: gray image; output: array[255] histogram
+        # 建安
+        if hasattr(self, 'gray') and img is None:
+            img = self.gray
+        if img is not None:
+            self.histogram = np.array([(img == i).sum() for i in range(256)])
             return self.histogram
-
-    def histogram_equalization(self): 
-        # ref: https://www.cnblogs.com/klchang/p/9872363.html
-        
+    
+    # Azen
+    def histogram_equalization(self): # 直方圖均衡化 input: gray; image output: gray image after histogram equalization
+        # Azen
         height, width = self.gray.shape
-        p = self.histogram / (height * width) * 1.0
+        p = self.histogram / (height * width - 1) * 1.0
         cdf = np.zeros(len(p))
         cdf[0] = p[0]
         for i in range(1, len(p)):
             cdf[i] = cdf[i - 1] + p[i]
+        cdf = cdf - np.min(cdf)
         cdf = np.around((256 - 1) * cdf)
         
         # cdf = (256 - 1) * (np.cumsum(self.histogram)/(self.gray.size * 1.0))
 
         cdf = cdf.astype('uint8')
         self.histogram = cdf
+        self.show_histogram('CDF')
         uniform_gray = np.zeros(self.gray.shape, dtype='uint8')  # Note the type of elements
         for i in range(height):
             for j in range(width):

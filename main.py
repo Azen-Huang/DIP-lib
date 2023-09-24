@@ -14,7 +14,6 @@ if __name__ == "__main__":
     gray_img = my_img.to_gray()
     histogram = my_img.to_histogram()
 
-    
     # my_img.info()
     my_img.show('gray', gray_img)
     my_img.show_histogram()
@@ -23,13 +22,3 @@ if __name__ == "__main__":
     my_img.to_histogram(histogram_equalization_img)
     my_img.show_histogram()
     my_img.show('histogram_equalization', histogram_equalization_img)
-
-    eq = cv2.equalizeHist(gray_img)
-    my_img.gray = eq
-    my_img.to_histogram()
-    my_img.show_histogram()
-    my_img.show('cv2 histogram_equalization', eq)
-
-
-    
-    
