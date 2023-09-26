@@ -29,14 +29,15 @@ class imglib:
         print('Process image shape: ', self.process_img.shape)
         print('gray image shape: ', self.gray.shape) if hasattr(self,'gray') else None
         print('-' * 44)
-
-    def show_histogram(self, title = 'histogram'):
-        if hasattr(self, 'histogram'):
-            x = np.arange(len(self.histogram))
-            plt.bar(x, self.histogram, color='blue')
-            plt.title(title)
-            plt.show()
     
+    def show_histogram(self, title = 'histogram', hist = None):
+        if hasattr(self, 'histogram') and hist is None:
+            hist = self.histogram
+        if hist is not None:
+            x = np.arange(len(hist))
+            plt.bar(x, hist, color='blue')
+            plt.title(title)
+            plt.show()    
     # Anthony
     def to_gray(self): # 圖像轉灰階 input: (3,x,x) BGR image output: (x, x) gray image        
         # opencv 預設排序不是RGB => BGR
@@ -53,7 +54,6 @@ class imglib:
 
     # 建安
     def to_histogram(self, img = None): #圖像直方圖 input: gray image; output: array[255] histogram
-        # 建安
         if hasattr(self, 'gray') and img is None:
             img = self.gray
         if img is not None:
@@ -61,26 +61,112 @@ class imglib:
             return self.histogram
     
     # Azen
-    def histogram_equalization(self): # 直方圖均衡化 input: gray; image output: gray image after histogram equalization
+    def histogram_equalization(self, img): # 直方圖均衡化 input: gray; image output: gray image after histogram equalization
         # Azen
-        height, width = self.gray.shape
-        p = self.histogram / (height * width - 1) * 1.0
+        height, width = img.shape
+        histogram = self.to_histogram(img)
+        histogram = self.contrast_limited(histogram, width, height)
+        # self.show_histogram(title='contrast limited', hist = histogram)
+        p = histogram / (height * width - 1) * 1.0
         cdf = np.zeros(len(p))
         cdf[0] = p[0]
         for i in range(1, len(p)):
             cdf[i] = cdf[i - 1] + p[i]
         cdf = cdf - np.min(cdf)
+        
         cdf = np.around((256 - 1) * cdf)
         
-        # cdf = (256 - 1) * (np.cumsum(self.histogram)/(self.gray.size * 1.0))
-
+        # cdf = (256 - 1) * (np.cumsum(self.histogram)/(img.size * 1.0))
+        self.show_histogram('CDF', hist=cdf)
         cdf = cdf.astype('uint8')
-        self.histogram = cdf
-        self.show_histogram('CDF')
-        uniform_gray = np.zeros(self.gray.shape, dtype='uint8')  # Note the type of elements
+        
+        uniform_gray = np.zeros(img.shape, dtype='uint8')  # Note the type of elements
         for i in range(height):
             for j in range(width):
-                uniform_gray[i,j] = cdf[self.gray[i,j]]
+                uniform_gray[i,j] = cdf[img[i,j]]
         
         self.process_img = uniform_gray
         return uniform_gray
+
+    # anthony
+    def contrast_limited(self,histogram,width_block,height_block): # input: array[255] output: array[255]
+        """ 
+            將直方圖限制的數值切出，並對齊取平均在加入至直方圖的每個點上
+            Cut out the values ​​of the histogram limits and 
+            average them over each point added to the histogram.
+        """
+        average = width_block * height_block // 256
+        Limit = 2 * average
+        print("Limit",Limit)
+        cutting = 0
+        for i in range(len(histogram)):
+            if histogram[i] > Limit:
+                cutting += histogram[i] - Limit
+                histogram[i] = Limit
+            
+        cutting = cutting // 256
+        
+        for i in range (len(histogram)):
+            histogram[i] = histogram[i] + cutting
+
+        return histogram
+        
+    
+    # def clculate_CDF(self,array):
+    #     total = np.sum(array)
+    #     cdf_value = np.cumsum(array) / total #cumsum 累加 prefix sum
+
+    #     return cdf_value
+
+    # Andy
+    def clahe(self, img, subset_img  = (8, 8)): # input: gray image output: gray image
+        """
+        subset_img: (height, width)
+        to_histogram
+        histogram_equalization
+        contrast_limited
+        to_gray
+        """
+
+        # Step1. Split images into four subset
+        numHeight = img.shape[0] // subset_img[0]
+        numWidth = img.shape[1] // subset_img[1]
+        print(img.shape, numHeight, numWidth)
+
+        images = list()
+        for oneHeight in range(numHeight):
+            for oneWidth in range(numWidth):
+                images.append(
+                    img[oneHeight*subset_img[0]:(oneHeight+1)*subset_img[0],  oneWidth*subset_img[0]:(oneWidth+1)*subset_img[0]]
+                )
+        
+        # Step2. Each images is converted into histogram equalization
+        grayImg = [
+            self.histogram_equalization(img = oneImg)
+            for oneImg in images
+        ]
+
+        # # Step3. 
+        # cuttedHistograms = [
+        #     self.contrast_limited(
+        #         oneHistogram, 
+        #         width_block = subset_img[1], 
+        #         height_block = subset_img[0]
+        #     )
+        #     for oneHistogram in histograms
+        # ]
+        
+        # Step4. CDF
+        # CDFs = [
+        #     self.clculate_CDF(oneCuttedHistogram)
+        #     for oneCuttedHistogram in histograms
+        # ]
+
+        # Step5. Merge image
+        i = 0
+        newImg = np.zeros(shape = img.shape)
+        for oneHeight in range(numHeight):
+            for oneWidth in range(numWidth):
+                newImg[oneHeight*subset_img[0]:(oneHeight+1)*subset_img[0],  oneWidth*subset_img[0]:(oneWidth+1)*subset_img[0]] = grayImg[i]
+                i += 1
+        return newImg
