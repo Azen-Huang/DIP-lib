@@ -77,7 +77,7 @@ class imglib:
         cdf = np.around((256 - 1) * cdf)
         
         # cdf = (256 - 1) * (np.cumsum(self.histogram)/(img.size * 1.0))
-        self.show_histogram('CDF', hist=cdf)
+        # self.show_histogram('CDF', hist=cdf)
         cdf = cdf.astype('uint8')
         
         uniform_gray = np.zeros(img.shape, dtype='uint8')  # Note the type of elements
@@ -86,6 +86,7 @@ class imglib:
                 uniform_gray[i,j] = cdf[img[i,j]]
         
         self.process_img = uniform_gray
+        # self.show('uniform_gray', uniform_gray)
         return uniform_gray
 
     # anthony
@@ -97,7 +98,7 @@ class imglib:
         """
         average = width_block * height_block // 256
         Limit = 2 * average
-        print("Limit",Limit)
+        # print("Limit",Limit)
         cutting = 0
         for i in range(len(histogram)):
             if histogram[i] > Limit:
@@ -119,7 +120,7 @@ class imglib:
     #     return cdf_value
 
     # Andy
-    def clahe(self, img, subset_img  = (8, 8)): # input: gray image output: gray image
+    def clahe(self, img, subset_img  = (512, 512)): # input: gray image output: gray image
         """
         subset_img: (height, width)
         to_histogram
@@ -140,33 +141,23 @@ class imglib:
                     img[oneHeight*subset_img[0]:(oneHeight+1)*subset_img[0],  oneWidth*subset_img[0]:(oneWidth+1)*subset_img[0]]
                 )
         
+        print(len(images))
         # Step2. Each images is converted into histogram equalization
         grayImg = [
             self.histogram_equalization(img = oneImg)
             for oneImg in images
         ]
 
-        # # Step3. 
-        # cuttedHistograms = [
-        #     self.contrast_limited(
-        #         oneHistogram, 
-        #         width_block = subset_img[1], 
-        #         height_block = subset_img[0]
-        #     )
-        #     for oneHistogram in histograms
-        # ]
-        
-        # Step4. CDF
-        # CDFs = [
-        #     self.clculate_CDF(oneCuttedHistogram)
-        #     for oneCuttedHistogram in histograms
-        # ]
+        # for img in grayImg:
+        #     self.show('img', img)
 
-        # Step5. Merge image
+        # Step3. Merge image
         i = 0
-        newImg = np.zeros(shape = img.shape)
+        newImg = np.zeros(shape = (grayImg[0].shape[0] * numHeight, grayImg[0].shape[0] * numWidth), dtype=np.uint8)
         for oneHeight in range(numHeight):
             for oneWidth in range(numWidth):
                 newImg[oneHeight*subset_img[0]:(oneHeight+1)*subset_img[0],  oneWidth*subset_img[0]:(oneWidth+1)*subset_img[0]] = grayImg[i]
                 i += 1
+        
+        self.show('img', newImg)
         return newImg
