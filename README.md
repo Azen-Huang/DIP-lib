@@ -2,7 +2,9 @@
 ## Member
 1. Azen
 2. Antony
-3. 建安
+3. Andy(建安)
+4. fredh
+
 ## imglib function (our own image processing library):
 2. to_gray() -> BGR image(3,x,x) to Gray image(x,x)
 3. to_histogram() -> Gray image to histogram 1D numpy array
